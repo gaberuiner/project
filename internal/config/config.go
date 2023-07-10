@@ -1,12 +1,14 @@
 package config
 
 import (
+	"io/ioutil"
 	"log"
-	"os"
 	"time"
 
-	"github.com/ilyakaznacheev/cleanenv"
+	"gopkg.in/yaml.v3"
 )
+
+var configPath = "./config/local.yaml"
 
 type Config struct {
 	Env         string     `yaml:"env"`
@@ -21,17 +23,11 @@ type HTTPServer struct {
 }
 
 func MustReadConfigFile() *Config {
-	config_path := os.Getenv("CONFIG_PATH")
-	if config_path == "" {
-		log.Fatal("config path is not set")
-	}
-	if _, err := os.Stat(config_path); os.IsNotExist(err) {
-		log.Fatal("config file does not exist")
+	data, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		log.Fatal("config file does not exist: %w", err)
 	}
 	var cfg Config
-	if err := cleanenv.ReadConfig(config_path, &cfg); err != nil {
-		log.Fatal("can't read config file")
-
-	}
+	err = yaml.Unmarshal(data, &cfg)
 	return &cfg
 }
